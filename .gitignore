@@ -1,0 +1,39 @@
+# ============================================================
+#  .gitignore — Python development version
+#  Author: Alexander Skriabikov
+#  Project: GoIT Course — Python Tier 1
+#  Description:
+#     This file excludes automatically generated, cached,
+#     or environment-specific files from version control.
+# ============================================================
+
+# Python cache / compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.build/
+dist/
+*.log
+
+# Virtual environments
+.venv/
+venv/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# VS Code / IDE configs
+.vscode/
+.settings/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Data files
+*.csv
+*.xlsx
+*.json
