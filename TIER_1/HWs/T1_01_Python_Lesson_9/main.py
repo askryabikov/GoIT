@@ -15,10 +15,10 @@ class Phone(Field):       # Phone field with 10 digits validation
     def __init__(self, value: str):
         if not self._is_valid(value):    # In case of incorrect input
             raise ValueError("Phone number must contain exactly 10 digits.")
-        super().__init__(value)
+        super().__init__(value)   # "super" recalls __init__
 
     @staticmethod
-    def _is_valid(value: str) -> bool:   # Exactly 10 digits
+    def _is_valid(value: str) -> bool:   # Must be exactly 10 digits
         return value.isdigit() and len(value) == 10
 
 
@@ -85,14 +85,14 @@ if __name__ == "__main__":
     jane_record.add_phone("9876543210")
     book.add_record(jane_record)
 
-    for name, record in book.data.items():        # Shows all contacts in Address book
+    for name, record in book.data.items():    # Shows all contacts in Address book
         print(record)
 
-    john = book.find("John")        # Search and edit phone number
+    john = book.find("John")    # Search and edit phone number
     john.edit_phone("1234567890", "1112223333")
     print(john)
 
     found_phone = john.find_phone("5555555555")   # Search for phone number in Contact
     print(f"{john.name}: {found_phone}")
 
-    book.delete("Jane")              # Delete contact Jane
+    book.delete("Jane")         # Delete contact Jane
