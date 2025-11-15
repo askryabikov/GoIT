@@ -1,5 +1,7 @@
 import re        # re stands for Regular Expression
 from typing import Callable, Iterable
+    # Callable stands for function
+    # Iterable stands for any object which might be cycled using FOR
 
 
 def generator_numbers(text: str) -> Iterable[float]:   # digits as text are returned as float numbers
@@ -30,7 +32,7 @@ def sum_profit(text: str, func: Callable[[str], Iterable[float]]) -> float:
     """
     Calculates total income using generator function.
 
-    Args:
+    Arguments:
         text (str): Input text that may contain income
         func (Callable[[str], Iterable[float]]): 
             text being returned as an iterable/generator of floats to summarize

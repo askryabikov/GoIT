@@ -16,7 +16,6 @@ def caching_fibo():      # Creates a Fibonacci function with caching
             return 0
         if n == 1:
             return 1
-
         if n in cache:       # returns cached result
             return cache[n]
 
