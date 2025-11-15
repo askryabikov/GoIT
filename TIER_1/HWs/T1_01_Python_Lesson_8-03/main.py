@@ -1,15 +1,7 @@
 """
-Log analyzer script.
-
-Usage examples (from terminal):
-
+Commands:
     python main.py log.txt
     python main.py log.txt error
-
-The script:
-- reads a log file
-- counts number of error entries: INFO / DEBUG / ERROR / WARNING
-- optionally prints all lines of a specific level (e.g. ERROR)
 """
 
 import sys
@@ -19,9 +11,9 @@ LOG_LEVELS = ("INFO", "DEBUG", "ERROR", "WARNING")   # Log warning levels
 
 def parse_log_line(line: str) -> Dict[str, str] | None:
     """
-    Parse single log line.
+    Checks each log line
 
-    Expected format:
+    Date format and message format:
         "YYYY-MM-DD HH:MM:SS LEVEL message..."
 
     Returns:
@@ -57,9 +49,9 @@ def parse_log_line(line: str) -> Dict[str, str] | None:
 
 def load_logs(file_path: str) -> List[Dict[str, str]]:
     """
-    Load and parse all log lines from file.
+    Load and check all log lines from file.
 
-    Functional style:
+    Style:
         - map(parse_log_line, file)   → apply parser to each line
         - filter(None, ...)           → drop lines where parser returned None
         - list(...)                   → collect into list
@@ -157,16 +149,14 @@ def display_logs_for_level(logs: List[Dict[str, str]], level: str) -> None:
 
 def main() -> None:
     """
-    Entry point for CLI application.
+    Commands:
+        python main.py log.txt
+        python main.py "path/to/log.txt" error
 
-    Usage:
-        python main.py path/to/logfile.log
-        python main.py path/to/logfile.log error
-
-    First argument:
+    1st argument:
         - path to log file
 
-    Optional second argument:
+    Optional 2nd argument:
         - log level to show details (info, error, debug, warning)
     """
     if len(sys.argv) < 2:
@@ -186,8 +176,13 @@ def main() -> None:
     counts = count_logs_by_level(logs) # counts each type of warning
     display_log_counts(counts)
 
-    if level_arg:
+    if level_arg:     # shows specific erors when typed in as a second argument
         display_logs_for_level(logs, level_arg)
+        # Example:
+        # python main.py log.txt ERROR
+        # Деталі логів для рівня 'ERROR':
+        # 2024-01-22 09:00:45 - Database connection failed.
+        # 2024-01-22 11:30:15 - Backup process failed.
 
 if __name__ == "__main__":
     main()
