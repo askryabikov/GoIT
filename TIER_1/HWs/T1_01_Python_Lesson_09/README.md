@@ -102,7 +102,6 @@ This solution fully implements:
 
 ---
 
-## 👤 Author
-**Alexander Skriabikov**  
-Python Student — GoIT Academy  
-Moldova, Chisinau
+## Created by:
+**Author:** Oleksandr Skriabikov  
+Created as part of the **Neoversity Python course, Lesson 09**

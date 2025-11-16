@@ -71,4 +71,4 @@ Then type commands as shown in the list above.
 
 ## Created by:
 **Author:** Oleksandr Skriabikov  
-Created as part of the **Neoversity Python course, Lesson 6, Home Task 1**
+Created as part of the **Neoversity Python course, Lesson 10**
