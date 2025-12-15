@@ -1,25 +1,33 @@
 from queue import Queue
 
-queue = Queue()     # create empty queue
+requests_queue = Queue()    # Creating an empty queue
 
-def generate_request(request):  # funtion for generating requests
-    print(f"Створено заявку: {request}")
-    queue.put(request)
+request_id_counter = 0
 
 
-def process_request():          # processing function
-    if not queue.empty():
-        req = queue.get()
-        print(f"Обробляємо заявку: {req}")
+def generate_request():
+    global request_id_counter
+    request_id_counter += 1                       # own number for each request
+    request = f"Request-{request_id_counter}"     # creating a new request
+    requests_queue.put(request)                   # add request at the end of the queue
+    print(f"Created request: {request}")
+
+
+def process_request():
+    if not requests_queue.empty():                # check if queue has at least one element
+        request = requests_queue.get()            # remove the oldest request
+
+        print(f"Processing request: {request}")
     else:
-        print("Черга пуста")
+        print("Queue is empty")
 
 
-generate_request("Заявка-1")    # main part
-generate_request("Заявка-2")
-generate_request("Заявка-3")
+generate_request()      # Generate 3 requests 
+generate_request()
+generate_request()
 
+process_request()       # simulate processing of requests
 process_request()
 process_request()
-process_request()
-process_request()       # empty queue
+
+process_request()       # additional for empty queue
