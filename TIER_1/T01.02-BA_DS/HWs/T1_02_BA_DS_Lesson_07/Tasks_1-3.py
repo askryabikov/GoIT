@@ -5,6 +5,7 @@ class AVLNode:
         self.left = None
         self.right = None
 
+    
     def __str__(self, level=0, prefix="Root: "):                # shows tree in string (recursive)
         ret = "\t" * level + prefix + str(self.key) + "\n"
         if self.left:
