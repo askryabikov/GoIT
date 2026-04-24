@@ -1,0 +1,334 @@
+HW 4
+
+-- 1. Створіть базу даних для керування бібліотекою книг згідно зі структурою, наведеною нижче. Використовуйте DDL-команди для створення необхідних таблиць та їх зв'язків.
+
+CREATE SCHEMA IF NOT EXISTS LibraryManagement;
+
+USE LibraryManagement;
+
+CREATE TABLE authors (
+    author_id INT AUTO_INCREMENT PRIMARY KEY,
+    author_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE genres (
+    genre_id INT AUTO_INCREMENT PRIMARY KEY,
+    genre_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE books (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    publication_year YEAR NOT NULL,
+    author_id INT NOT NULL,
+    genre_id INT NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES authors(author_id),
+    FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
+);
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE borrowed_books (
+    borrow_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT NOT NULL,
+    user_id INT NOT NULL,
+    borrow_date DATE NOT NULL,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+-- 2. Заповніть таблиці простими видуманими тестовими даними. Достатньо одного-двох рядків у кожну таблицю.
+
+
+INSERT INTO authors (author_name)
+VALUES
+    ('George Orwell'),
+    ('Ray Bradbury');
+
+INSERT INTO genres (genre_name)
+VALUES
+    ('Dystopian'),
+    ('Science Fiction');
+
+INSERT INTO users (username, email)
+VALUES
+    ('alex_doe', 'alex_doe@gmail.com'),
+    ('masha_brooks', 'masha_brooks@gmail.com');
+
+INSERT INTO books (title, publication_year, author_id, genre_id)
+VALUES
+    ('1984', 1949, 1, 1),
+    ('Fahrenheit 451', 1953, 2, 2);
+
+INSERT INTO borrowed_books (book_id, user_id, borrow_date, return_date)
+VALUES
+    (1, 1, '2024-01-10', '2024-01-20'),
+    (2, 2, '2024-02-01', NULL);
+    
+SELECT * FROM authors;
+
+SELECT * FROM genres;
+
+SELECT * FROM users;
+
+SELECT * FROM books;
+
+SELECT * FROM borrowed_books;
+
+
+-- 3. Перейдіть до бази даних, з якою працювали у темі 3. Напишіть запит за допомогою операторів FROM та INNER JOIN, що об’єднує всі таблиці даних, які ми завантажили з файлів: order_details, orders, customers, products, categories, employees, shippers, suppliers. Для цього ви маєте знайти спільні ключі.
+
+
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    o.date AS order_date,
+
+    c.id AS customer_id,
+    c.name AS customer_name,
+
+    e.employee_id,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+
+    s.id AS shipper_id,
+    s.name AS shipper_name,
+
+    p.id AS product_id,
+    p.name AS product_name,
+    p.price,
+    od.quantity,
+
+    cat.id AS category_id,
+    cat.name AS category_name,
+
+    sup.id AS supplier_id,
+    sup.name AS supplier_name
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id;
+
+
+
+-- 4.1 Визначте, скільки рядків ви отримали (за допомогою оператора COUNT).
+
+
+SELECT COUNT(*) AS rows_count
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id;
+
+
+-- 4.2 Змініть декілька операторів INNER на LEFT чи RIGHT. Визначте, що відбувається з кількістю рядків. Чому? Напишіть відповідь у текстовому файлі.
+
+Відповідь:
+У запиті я замінив два INNER JOIN на LEFT JOIN. 
+INNER JOIN показує тільки ті рядки, де є збіг в обох таблицях. 
+LEFT JOIN залишає всі рядки з основної лівої таблиці, навіть якщо в правій таблиці немає відповідного запису.
+
+У нашому випадку кількість рядків не змінилася, тому що в цих таблицях дані пов’язані коректно і для записів є відповідні значення. Якби частини зв’язків не було, LEFT JOIN міг би показати більше рядків, ніж INNER JOIN.
+
+SELECT COUNT(*) AS rows_count
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+LEFT JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+LEFT JOIN suppliers AS sup
+    ON p.supplier_id = sup.id;
+
+
+-- 4.3 На основі запита з пункта 3 виконайте наступне: оберіть тільки ті рядки, де employee_id > 3 та ≤ 10.
+
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    o.date AS order_date,
+
+    c.id AS customer_id,
+    c.name AS customer_name,
+
+    e.employee_id,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+
+    s.id AS shipper_id,
+    s.name AS shipper_name,
+
+    p.id AS product_id,
+    p.name AS product_name,
+    p.price,
+    od.quantity,
+
+    cat.id AS category_id,
+    cat.name AS category_name,
+
+    sup.id AS supplier_id,
+    sup.name AS supplier_name
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id
+WHERE e.employee_id > 3
+  AND e.employee_id <= 10
+ORDER BY e.employee_id, o.id, od.id;
+
+
+-- 4.4 Згрупуйте за іменем категорії, порахуйте кількість рядків у групі, середню кількість товару (кількість товару знаходиться в order_details.quantity)
+
+
+SELECT
+    cat.name AS category_name,
+    COUNT(*) AS rows_count,
+    AVG(od.quantity) AS avg_quantity
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id
+GROUP BY cat.name;
+
+
+-- 4.5 Відфільтруйте рядки, де середня кількість товару більша за 21.
+
+
+SELECT
+    cat.name AS category_name,
+    COUNT(*) AS rows_count,
+    AVG(od.quantity) AS avg_quantity
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id
+GROUP BY cat.name
+HAVING AVG(od.quantity) > 21;
+
+
+-- 4.6 Відсортуйте рядки за спаданням кількості рядків.
+
+SELECT
+    cat.name AS category_name,
+    COUNT(*) AS rows_count,
+    AVG(od.quantity) AS avg_quantity
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id
+GROUP BY cat.name
+HAVING AVG(od.quantity) > 21
+ORDER BY rows_count DESC;
+
+
+-- 4.7 Виведіть на екран (оберіть) чотири рядки з пропущеним першим рядком.
+
+SELECT
+    cat.name AS category_name,
+    COUNT(*) AS rows_count,
+    AVG(od.quantity) AS avg_quantity
+FROM order_details AS od
+INNER JOIN orders AS o
+    ON od.order_id = o.id
+INNER JOIN customers AS c
+    ON o.customer_id = c.id
+INNER JOIN employees AS e
+    ON o.employee_id = e.employee_id
+INNER JOIN shippers AS s
+    ON o.shipper_id = s.id
+INNER JOIN products AS p
+    ON od.product_id = p.id
+INNER JOIN categories AS cat
+    ON p.category_id = cat.id
+INNER JOIN suppliers AS sup
+    ON p.supplier_id = sup.id
+GROUP BY cat.name
+HAVING AVG(od.quantity) > 21
+ORDER BY rows_count DESC
+LIMIT 4 OFFSET 1;
+
+
+
+
+
+
+
