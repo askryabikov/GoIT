@@ -1,0 +1,247 @@
+-- HW FP. 
+
+
+1. Завантажте дані.
+Створіть схему pandemic у базі даних за допомогою SQL-команди.
+Оберіть її як схему за замовчуванням за допомогою SQL-команди.
+Імпортуйте дані за допомогою Import wizard так, як ви вже робили це у темі 3.
+Продивіться дані, щоб бути у контексті.
+Як бачите, атрибути Entity та Code постійно повторюються. Позбудьтеся цього за допомогою нормалізації даних.
+
+
+CREATE SCHEMA IF NOT EXISTS pandemic;
+USE pandemic;
+
+CREATE TABLE infectious_cases (
+    Entity VARCHAR(255),
+    Code VARCHAR(50),
+    `Year` VARCHAR(10),
+    Number_yaws VARCHAR(50),
+    polio_cases VARCHAR(50),
+    cases_guinea_worm VARCHAR(50),
+    Number_rabies VARCHAR(50),
+    Number_malaria VARCHAR(50),
+    Number_hiv VARCHAR(50),
+    Number_tuberculosis VARCHAR(50),
+    Number_smallpox VARCHAR(50),
+    Number_cholera_cases VARCHAR(50)
+);
+
+
+USE pandemic;
+
+SELECT COUNT(*) AS imported_rows
+FROM infectious_cases;
+
+-- 10521 v
+
+
+2. Нормалізуйте таблицю infectious_cases до 3ї нормальної форми. Збережіть у цій же схемі дві таблиці з нормалізованими даними.
+
+Виконайте запит SELECT COUNT(*) FROM infectious_cases , щоб ментор міг зрозуміти, скільки записів ви завантажили у базу даних із файла.
+
+2.1 Довідник країн
+
+USE pandemic;
+
+DROP TABLE IF EXISTS infectious_cases_normalized;
+DROP TABLE IF EXISTS entities;
+
+
+CREATE TABLE entities (
+    entity_id INT AUTO_INCREMENT PRIMARY KEY,
+    entity VARCHAR(255) NOT NULL,
+    code VARCHAR(50),
+    UNIQUE KEY uk_entity_code (entity, code)
+);
+
+
+INSERT INTO entities (entity, code)
+SELECT DISTINCT
+    Entity,
+    NULLIF(TRIM(Code), '')
+FROM infectious_cases;
+
+
+SELECT COUNT(*) AS entities_count
+FROM entities;
+
+
+SELECT *
+FROM entities
+ORDER BY entity_id
+LIMIT 20;
+
+
+
+2.2 Нормалізована таблиця
+
+USE pandemic;
+
+DROP TABLE IF EXISTS infectious_cases_normalized;
+
+
+CREATE TABLE infectious_cases_normalized (
+    case_id INT AUTO_INCREMENT PRIMARY KEY,
+    entity_id INT NOT NULL,
+    year INT NOT NULL,
+    number_yaws DECIMAL(20,5),
+    polio_cases DECIMAL(20,5),
+    cases_guinea_worm DECIMAL(20,5),
+    number_rabies DECIMAL(20,5),
+    number_malaria DECIMAL(20,5),
+    number_hiv DECIMAL(20,5),
+    number_tuberculosis DECIMAL(20,5),
+    number_smallpox DECIMAL(20,5),
+    number_cholera_cases DECIMAL(20,5),
+    FOREIGN KEY (entity_id) REFERENCES entities(entity_id)
+);
+
+
+INSERT INTO infectious_cases_normalized (
+    entity_id,
+    year,
+    number_yaws,
+    polio_cases,
+    cases_guinea_worm,
+    number_rabies,
+    number_malaria,
+    number_hiv,
+    number_tuberculosis,
+    number_smallpox,
+    number_cholera_cases
+)
+SELECT
+    e.entity_id,
+    CAST(ic.`Year` AS UNSIGNED),
+    CAST(NULLIF(TRIM(ic.Number_yaws), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.polio_cases), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.cases_guinea_worm), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_rabies), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_malaria), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_hiv), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_tuberculosis), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_smallpox), '') AS DECIMAL(20,5)),
+    CAST(NULLIF(TRIM(ic.Number_cholera_cases), '') AS DECIMAL(20,5))
+FROM infectious_cases AS ic
+JOIN entities AS e
+    ON e.entity = ic.Entity
+   AND e.code <=> NULLIF(TRIM(ic.Code), '');
+
+
+SELECT *
+FROM infectious_cases_normalized
+ORDER BY entity_id, year
+LIMIT 20;
+
+
+2.3 Перевірка кількості рядків
+
+USE pandemic;
+
+SELECT
+    (SELECT COUNT(*) FROM infectious_cases) AS imported_rows,
+    (SELECT COUNT(*) FROM infectious_cases_normalized) AS normalized_rows,
+    (SELECT COUNT(*) FROM entities) AS entities_count;
+
+
+3. Проаналізуйте дані:
+
+Для кожної унікальної комбінації Entity та Code або їх id порахуйте середнє, мінімальне, максимальне значення та суму для атрибута Number_rabies.
+Врахуйте, що атрибут Number_rabies може містити порожні значення — вам попередньо необхідно їх відфільтрувати.
+Результат відсортуйте за порахованим середнім значенням у порядку спадання.
+Оберіть тільки 10 рядків для виведення на екран.
+
+
+USE pandemic;
+
+SELECT
+    e.entity_id,
+    e.entity,
+    e.code,
+    ROUND(AVG(icn.number_rabies), 5) AS avg_rabies,
+    MIN(icn.number_rabies) AS min_rabies,
+    MAX(icn.number_rabies) AS max_rabies,
+    SUM(icn.number_rabies) AS sum_rabies
+FROM infectious_cases_normalized AS icn
+JOIN entities AS e
+    ON e.entity_id = icn.entity_id
+WHERE icn.number_rabies IS NOT NULL
+GROUP BY
+    e.entity_id,
+    e.entity,
+    e.code
+ORDER BY
+    avg_rabies DESC,
+    e.entity ASC
+LIMIT 10;
+
+
+4. Побудуйте колонку різниці в роках.
+
+Для оригінальної або нормованої таблиці для колонки Year побудуйте з використанням вбудованих SQL-функцій:
+
+- атрибут, що створює дату першого січня відповідного року,
+  Наприклад, якщо атрибут містить значення ’1996’, то значення нового атрибута має бути ‘1996-01-01’.
+- атрибут, що дорівнює поточній даті,
+- атрибут, що дорівнює різниці в роках двох вищезгаданих колонок.
+  Перераховувати всі інші атрибути, такі як Number_malaria, не потрібно
+
+
+USE pandemic;
+
+SELECT
+    case_id,
+    entity_id,
+    `year`,
+    MAKEDATE(`year`, 1) AS first_day_of_year,
+    CURDATE() AS today_date,
+    TIMESTAMPDIFF(YEAR, MAKEDATE(`year`, 1), CURDATE()) AS years_difference
+FROM infectious_cases_normalized
+ORDER BY
+    `year` DESC,
+    entity_id ASC,
+    case_id ASC
+LIMIT 50;
+
+
+5. Побудуйте власну функцію.
+
+Створіть і використайте функцію, що будує такий же атрибут, як і в попередньому завданні: функція має приймати на вхід значення року, а повертати різницю в роках між поточною датою та датою, створеною з атрибута року (1996 рік → ‘1996-01-01’).
+
+
+USE pandemic;
+
+DROP FUNCTION IF EXISTS year_difference_from_current;
+
+DELIMITER //
+
+CREATE FUNCTION year_difference_from_current(input_year INT)
+RETURNS INT
+DETERMINISTIC
+NO SQL
+BEGIN
+    RETURN TIMESTAMPDIFF(YEAR, MAKEDATE(input_year, 1), CURDATE());
+END //
+
+DELIMITER ;
+
+
+SELECT
+    case_id,
+    entity_id,
+    `year`,
+    year_difference_from_current(`year`) AS years_difference
+FROM infectious_cases_normalized
+ORDER BY
+    `year` DESC,
+    entity_id ASC,
+    case_id ASC
+LIMIT 50;
+
+
+
+
+
+
+
